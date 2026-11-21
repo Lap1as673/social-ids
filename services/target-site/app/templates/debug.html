@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Debug — MiniLink{% endblock %}
+{% block content %}
+    <h1>/debug</h1>
+    <p class="error">
+        ⚠️ Намеренная уязвимость: эта страница открыта всем без авторизации.
+    </p>
+
+    <h2>Версии</h2>
+    <ul>
+        {% for k, v in data.versions.items() %}
+            <li><strong>{{ k }}</strong>: {{ v }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Окружение (фрагмент)</h2>
+    <ul>
+        {% for k, v in data.env.items() %}
+            <li><strong>{{ k }}</strong>: {{ v }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Счётчики БД</h2>
+    <ul>
+        {% for k, v in data.counts.items() %}
+            <li><strong>{{ k }}</strong>: {{ v }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Роуты</h2>
+    <table class="table">
+        <thead><tr><th>Path</th><th>Methods</th><th>Name</th></tr></thead>
+        <tbody>
+        {% for r in data.routes %}
+            <tr>
+                <td><code>{{ r.path }}</code></td>
+                <td>{{ r.methods|join(", ") }}</td>
+                <td class="muted">{{ r.name or "" }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {% if data.current_user %}
+        <h2>Текущий пользователь</h2>
+        <pre>{{ data.current_user }}</pre>
+    {% endif %}
+{% endblock %}

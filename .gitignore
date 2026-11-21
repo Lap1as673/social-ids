@@ -1,0 +1,4 @@
+# ML data
+services/ml/data/
+*.parquet
+*.csv

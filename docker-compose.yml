@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: social-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-social}
+      POSTGRES_USER: ${POSTGRES_USER:-social}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-social}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-social} -d ${POSTGRES_DB:-social}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - social-net
+
+  target-site:
+    build:
+      context: ./services/target-site
+    container_name: social-target-site
+    env_file:
+      - ./services/target-site/.env
+    environment:
+      POSTGRES_HOST: postgres
+      DATABASE_URL: postgresql+asyncpg://social:social@postgres:5432/social
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - social-net
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+  attack-generator:
+    build:
+      context: ./services/attack-generator
+    container_name: social-attack-generator
+    environment:
+      - TARGET_URL=http://target-site:8000
+    depends_on:
+      - target-site
+    networks:
+      - social-net
+      
+  cicflowmeter:
+    image: mielverkerken/cicflowmeter:1.0.0
+    container_name: social-cicflowmeter
+    # Мы будем запускать его вручную с нужными аргументами, поэтому command не указываем
+    # или ставим sleep, чтобы контейнер не завершался сразу
+    command: tail -f /dev/null 
+    volumes:
+      - ./services/cicflowmeter/input:/tmp/pcap/input
+      - ./services/cicflowmeter/output:/tmp/pcap/output
+    network_mode: host # Или подключить к сети target-site, но для sniffing нужен доступ
+    privileged: true
+volumes:
+  pgdata:
+
+networks:
+  social-net:
+    driver: bridge

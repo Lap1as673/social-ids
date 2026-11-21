@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import avatar %}
+{% block title %}@{{ profile_user.username }} — MiniLink{% endblock %}
+{% block content %}
+    <div class="profile-header">
+        <!-- Заменили старый div на большой макрос аватарки -->
+        <div class="avatar-large">
+            {{ avatar(profile_user.username, 80) }}
+        </div>
+        <div class="profile-info">
+            <h1>@{{ profile_user.username }}</h1>
+            {% if profile_user.bio %}
+                <p class="muted">{{ profile_user.bio }}</p>
+            {% endif %}
+            <p class="muted">
+                На сайте с {{ profile_user.created_at.strftime("%Y-%m-%d") }}
+            </p>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat"><strong>{{ stats.posts }}</strong><span>постов</span></div>
+        <div class="stat"><strong>{{ stats.likes_given }}</strong><span>лайков</span></div>
+        <div class="stat"><strong>{{ stats.comments }}</strong><span>комментов</span></div>
+    </div>
+
+    <h2>Посты</h2>
+    {% if posts %}
+        <ul class="post-list">
+            {% for post in posts %}
+                <li class="post-card">
+                    <div class="post-meta">
+                        <a href="/posts/{{ post.id }}">Пост #{{ post.id }}</a>
+                        <span class="muted">{{ post.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+                    </div>
+                    <div class="post-content">{{ post.content }}</div>
+                    {% if post.image_url and post.image_url != 'None' and post.image_url != '' %}
+                        <img class="post-image" src="{{ post.image_url }}" alt="post image">
+                    {% endif %}
+                    <div class="post-actions">
+                        <span>❤️ {{ post.likes_count }}</span>
+                        <span>💬 {{ post.comments_count }}</span>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <!-- Красивое пустое состояние -->
+        <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <h3>Постов пока нет</h3>
+            <p>Этот пользователь ещё ничего не опубликовал.</p>
+        </div>
+    {% endif %}
+
+    <div class="pagination">
+        {% if has_prev %}
+            <a class="btn btn-secondary" href="/user/{{ profile_user.username }}?page={{ page - 1 }}&limit={{ limit }}">← Назад</a>
+        {% endif %}
+        <span class="muted">Стр. {{ page }} · всего {{ total }} постов</span>
+        {% if has_next %}
+            <a class="btn btn-secondary" href="/user/{{ profile_user.username }}?page={{ page + 1 }}&limit={{ limit }}">Вперёд →</a>
+        {% endif %}
+    </div>
+{% endblock %}

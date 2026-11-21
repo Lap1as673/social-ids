@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import avatar %}
+{% block title %}MiniLink — лента{% endblock %}
+{% block content %}
+    <div class="feed-header">
+        <h1>Лента</h1>
+        {% if user %}
+        <form id="create-post-form" class="post-form" enctype="multipart/form-data">
+            <textarea name="content" placeholder="Что нового?" rows="3" required></textarea>
+            <div class="post-form-actions">
+                <input type="file" name="image" accept="image/*" class="file-input">
+                <button class="btn" type="submit">Опубликовать</button>
+            </div>
+            <div class="form-error" id="post-error" hidden></div>
+        </form>
+        {% else %}
+            <p class="muted"><a href="/login">Войдите</a>, чтобы публиковать посты.</p>
+        {% endif %}
+    </div>
+
+    {% if items %}
+        <ul class="post-list">
+            {% for post in items %}
+                <li class="post-card">
+                    <div class="post-meta">
+                        <!-- ВОТ ЗДЕСЬ ДОБАВЛЕНА АВАТАРКА -->
+                        <div class="post-author">
+                            {{ avatar(post.author.username, 32) }}
+                            <a href="/user/{{ post.author.username }}">@{{ post.author.username }}</a>
+                        </div>
+                        <span class="muted">{{ post.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+                    </div>
+                    <div class="post-content">
+                        {{ post.content }}
+                    </div>
+                    {% if post.image_url and post.image_url != 'None' and post.image_url != '' %}
+                        <img class="post-image" src="{{ post.image_url }}" alt="post image">
+                    {% endif %}
+                    <div class="post-actions">
+                        <button
+                            class="like-btn"
+                            data-post-id="{{ post.id }}"
+                            data-count="{{ post.likes_count }}"
+                            type="button"
+                        >❤️ <span class="like-count">{{ post.likes_count }}</span></button>
+                        <span>💬 {{ post.comments_count }}</span>
+                        <a href="/posts/{{ post.id }}">Открыть</a>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <!-- ВОТ ЗДЕСЬ КРАСИВОЕ ПУСТОЕ СОСТОЯНИЕ -->
+        <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <h3>Здесь пока пусто</h3>
+            <p>Станьте первым, кто опубликует пост!</p>
+        </div>
+    {% endif %}
+
+    <div class="pagination">
+        {% if has_prev %}
+            <a class="btn btn-secondary" href="/?page={{ page - 1 }}&limit={{ limit }}">← Назад</a>
+        {% endif %}
+        <span class="muted">Стр. {{ page }} · всего {{ total }} постов</span>
+        {% if has_next %}
+            <a class="btn btn-secondary" href="/?page={{ page + 1 }}&limit={{ limit }}">Вперёд →</a>
+        {% endif %}
+    </div>
+{% endblock %}

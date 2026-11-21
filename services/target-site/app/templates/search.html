@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Поиск — MiniLink{% endblock %}
+{% block content %}
+    <h1>Поиск</h1>
+    <form method="get" action="/search" class="search-form">
+        <input type="text" name="q" value="{{ q }}" placeholder="Искать посты и пользователей..." autofocus>
+        <button class="btn" type="submit">Найти</button>
+    </form>
+
+    {% if q %}
+        <p class="muted">
+            Результаты по «{{ q }}»:
+            {{ results.total_users }} пользователей, {{ results.total_posts }} постов.
+        </p>
+
+        <h2>Пользователи</h2>
+        {% if results.users %}
+            <ul class="user-list">
+                {% for u in results.users %}
+                    <li class="user-card">
+                        <a href="/user/{{ u.username }}">@{{ u.username }}</a>
+                        {% if u.bio %}<span class="muted">— {{ u.bio }}</span>{% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="muted">Не найдено.</p>
+        {% endif %}
+
+        <h2>Посты</h2>
+        {% if results.posts %}
+            <ul class="post-list">
+                {% for post in results.posts %}
+                    <li class="post-card">
+                        <div class="post-meta">
+                            <a href="/user/{{ post.author.username }}">@{{ post.author.username }}</a>
+                            <span class="muted">{{ post.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+                        </div>
+                        <div class="post-content">{{ post.content }}</div>
+                        {% if post.image_url %}
+                            <img class="post-image" src="{{ post.image_url }}" alt="post image">
+                        {% endif %}
+                        <div class="post-actions">
+                            <span>❤️ {{ post.likes_count }}</span>
+                            <span>💬 {{ post.comments_count }}</span>
+                            <a href="/posts/{{ post.id }}">Открыть</a>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="muted">Постов не найдено.</p>
+        {% endif %}
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "macros/avatar.html" import avatar %}
+{% block title %}Пост #{{ post.id }} — MiniLink{% endblock %}
+{% block content %}
+    <a href="/" class="muted">← Назад к ленте</a>
+    <article class="post-card post-full" id="post-{{ post.id }}">
+        <div class="post-meta">
+            <!-- Добавлена аватарка автора -->
+            <div class="post-author">
+                {{ avatar(author.username, 40) }}
+                <a href="/user/{{ author.username }}">@{{ author.username }}</a>
+            </div>
+            <span class="muted">{{ post.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+        </div>
+        <div class="post-content">{{ post.content }}</div>
+        {% if post.image_url and post.image_url != 'None' and post.image_url != '' %}
+            <img class="post-image" src="{{ post.image_url }}" alt="post image">
+        {% endif %}
+        <div class="post-actions">
+            <button
+                class="like-btn"
+                data-post-id="{{ post.id }}"
+                data-count="{{ likes_count }}"
+                type="button"
+            >❤️ <span class="like-count">{{ likes_count }}</span></button>
+            <span>💬 {{ comments_count }}</span>
+        </div>
+    </article>
+
+    <h2>Комментарии ({{ comments|length }})</h2>
+
+    {% if user %}
+        <form method="post" action="/posts/{{ post.id }}/comments" class="comment-form">
+            <textarea name="content" placeholder="Ваш комментарий..." rows="3" required></textarea>
+            <button class="btn" type="submit">Отправить</button>
+        </form>
+    {% else %}
+        <p class="muted"><a href="/login">Войдите</a>, чтобы комментировать.</p>
+    {% endif %}
+
+    {% if comments %}
+        <ul class="comment-list">
+            {% for c in comments %}
+                <li class="comment" id="comment-{{ c.id }}">
+                    <div class="comment-meta">
+                        <!-- Здесь оставил c.author_id, так как в текущем роуте мы не тянем username для комментов (можно улучшить позже) -->
+                        <strong>@{{ c.author_id }}</strong>
+                        <span class="muted">{{ c.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+                        {% if user and (user.id == c.author_id or user.is_admin) %}
+                            <button class="link-danger js-delete-comment" data-comment-id="{{ c.id }}" type="button">удалить</button>
+                        {% endif %}
+                    </div>
+                    <p>{{ c.content }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <!-- Красивое пустое состояние -->
+        <div class="empty-state">
+            <div class="empty-icon">💬</div>
+            <h3>Комментариев пока нет</h3>
+            <p>Напишите что-нибудь первым!</p>
+        </div>
+    {% endif %}
+{% endblock %}  

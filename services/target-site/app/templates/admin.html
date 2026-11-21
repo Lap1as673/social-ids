@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Админка — MiniLink{% endblock %}
+{% block content %}
+    <h1>Админка</h1>
+    <p class="muted">Вы вошли как <strong>@{{ user.username }}</strong>.</p>
+
+    <h2>Пользователи</h2>
+    <table class="table">
+        <thead>
+            <tr><th>ID</th><th>Username</th><th>Email</th><th>Admin</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for u in users %}
+            <tr>
+                <td>{{ u.id }}</td>
+                <td>@{{ u.username }}</td>
+                <td class="muted">{{ u.email }}</td>
+                <td>{% if u.is_admin %}✅{% else %}—{% endif %}</td>
+                <td>
+                    {% if u.id != user.id %}
+                        <button class="btn btn-secondary js-toggle-admin" data-user-id="{{ u.id }}" type="button">
+                            {% if u.is_admin %}Снять админа{% else %}Сделать админом{% endif %}
+                        </button>
+                    {% else %}
+                        <span class="muted">(вы)</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Последние посты</h2>
+    {% if posts %}
+        <ul class="post-list">
+            {% for p in posts %}
+                <li class="post-card">
+                    <div class="post-meta">
+                        <a href="/posts/{{ p.id }}">Пост #{{ p.id }}</a>
+                        <span class="muted">{{ p.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+                    </div>
+                    <div class="post-content">{{ p.content[:200] }}{% if p.content|length > 200 %}…{% endif %}</div>
+                    <div class="post-actions">
+                        <button class="link-danger js-admin-delete-post" data-post-id="{{ p.id }}" type="button">удалить</button>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="muted">Постов нет.</p>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    document.addEventListener("click", async (ev) => {
+        const t = ev.target.closest(".js-toggle-admin");
+        if (t) {
+            const id = t.dataset.userId;
+            const r = await fetch(`/admin/user/${id}/toggle-admin`, {
+                method: "POST",
+                credentials: "include",
+                headers: { Accept: "application/json" },
+            });
+            if (!r.ok) { alert("Ошибка: " + r.status); return; }
+            window.location.reload();
+            return;
+        }
+        const d = ev.target.closest(".js-admin-delete-post");
+        if (d) {
+            if (!confirm("Удалить пост?")) return;
+            const id = d.dataset.postId;
+            const r = await fetch(`/admin/post/${id}`, {
+                method: "DELETE",
+                credentials: "include",
+                headers: { Accept: "application/json" },
+            });
+            if (!r.ok) { alert("Ошибка: " + r.status); return; }
+            window.location.reload();
+        }
+    });
+})();
+</script>
+{% endblock %}

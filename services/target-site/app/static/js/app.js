@@ -1,0 +1,1 @@
+console.log("MiniLink app.js loaded");
